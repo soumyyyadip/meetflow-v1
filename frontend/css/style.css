@@ -455,11 +455,21 @@ select.status-select {
 
 .btn-cancel {
   background-color: transparent;
+  color: #eab308;
+  border: 1px solid #eab308;
+}
+
+.btn-cancel:hover {
+  background-color: rgba(234, 179, 8, 0.1);
+}
+
+.btn-delete {
+  background-color: transparent;
   color: #ef4444;
   border: 1px solid #ef4444;
 }
 
-.btn-cancel:hover {
+.btn-delete:hover {
   background-color: rgba(239, 68, 68, 0.1);
 }
 

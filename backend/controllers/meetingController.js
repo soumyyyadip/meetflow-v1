@@ -68,3 +68,17 @@ exports.cancelMeeting = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteMeeting = async (req, res) => {
+  try {
+    const meeting = await Meeting.findOneAndDelete({ _id: req.params.id, createdBy: req.user.id });
+    if (!meeting) return res.status(404).json({ error: 'Meeting not found' });
+
+    // Delete associated tasks
+    await Task.deleteMany({ meetingId: meeting._id });
+
+    res.json({ message: 'Meeting deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

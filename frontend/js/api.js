@@ -59,6 +59,16 @@ class Api {
     return resData;
   }
 
+  async deleteMeeting(id) {
+    const res = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+    const resData = await res.json();
+    if (!res.ok) throw new Error(resData.error || 'Failed to delete meeting');
+    return resData;
+  }
+
   async getTasks() {
     const res = await fetch(`${API_BASE_URL}/tasks`, { headers: this.getHeaders() });
     const data = await res.json();

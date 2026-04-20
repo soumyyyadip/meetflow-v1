@@ -280,11 +280,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let statusMarkup = m.status === 'Cancelled' ? `<span class="status-cancelled"><strong>[CANCELLED]</strong></span>` : '';
     let cancelBtnMarkup = m.status === 'Scheduled' ? `<button class="btn btn-sm btn-cancel cancel-btn" data-id="${m._id}">Cancel Meeting</button>` : '';
+    let deleteBtnMarkup = `<button class="btn btn-sm btn-cancel delete-btn" data-id="${m._id}" style="background-color: var(--danger-color); color: white; border: none; margin-left: 5px;">Delete</button>`;
 
     card.innerHTML = `
       <div class="meeting-header-actions">
         <h3>${m.title} ${statusMarkup}</h3>
-        ${cancelBtnMarkup}
+        <div>
+          ${cancelBtnMarkup}
+          ${deleteBtnMarkup}
+        </div>
       </div>
       <div class="meeting-meta">${dateStr}</div>
       <div class="meeting-details">${partsHtml}</div>
@@ -299,6 +303,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm("Are you sure you want to cancel this meeting?")) {
           try {
             await window.api.cancelMeeting(m._id);
+            // Reload the view we are currently on
+            const activeView = document.querySelector('.sidebar nav li.active').getAttribute('data-target');
+            if (activeView === 'dashboard-view') loadDashboard();
+            if (activeView === 'meetings-view') loadAllMeetings(document.getElementById('global-search').value);
+          } catch (err) {
+            alert(err.message);
+          }
+        }
+      });
+    }
+
+    // Bind delete event
+    const deleteBtn = card.querySelector('.delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async (e) => {
+        if (confirm("Are you sure you want to permanently delete this meeting? This action cannot be undone.")) {
+          try {
+            await window.api.deleteMeeting(m._id);
             // Reload the view we are currently on
             const activeView = document.querySelector('.sidebar nav li.active').getAttribute('data-target');
             if (activeView === 'dashboard-view') loadDashboard();
