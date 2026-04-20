@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let statusMarkup = m.status === 'Cancelled' ? `<span class="status-cancelled"><strong>[CANCELLED]</strong></span>` : '';
     let cancelBtnMarkup = m.status === 'Scheduled' ? `<button class="btn btn-sm btn-cancel cancel-btn" data-id="${m._id}">Cancel Meeting</button>` : '';
-    let deleteBtnMarkup = `<button class="btn btn-sm btn-cancel delete-btn" data-id="${m._id}" style="background-color: var(--danger-color); color: white; border: none; margin-left: 5px;">Delete</button>`;
+    let deleteBtnMarkup = `<button class="btn btn-sm btn-delete delete-btn" data-id="${m._id}" style="margin-left: 5px;">Delete</button>`;
 
     card.innerHTML = `
       <div class="meeting-header-actions">
