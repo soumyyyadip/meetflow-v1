@@ -66,8 +66,8 @@ MeetFlow-B/
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd MeetFlow-B
+git clone https://github.com/soumyyyadip/meetflow-v1.git
+cd meetflow-v1
 ```
 
 ### 2. Install backend dependencies
