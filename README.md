@@ -1,75 +1,156 @@
 # MeetFlow
 
-MeetFlow is a simple and efficient meeting management web application designed to help you organize meetings, record minutes, and track action items seamlessly.
+> A clean, lightweight meeting management app — record minutes, track decisions, manage action items and participants. Built with Node.js, Express, MongoDB, and a vanilla HTML/CSS/JS frontend.
 
-## Prerequisites
+![Design](./TempFolder/MeetingDashboard.jsx)
 
-Before you begin, ensure you have the following installed on your system:
-- **Node.js** (v14 or higher recommended)
-- **npm** (Node Package Manager)
-- **MongoDB** (You can use a local instance or MongoDB Atlas)
+## Features
+
+- 🔐 **JWT Authentication** — secure signup & login
+- 📋 **Master-Detail UI** — sidebar meeting list + tabbed detail panel
+- 📝 **Meeting Minutes** — inline editable notes per meeting
+- ✅ **Action Items** — add tasks with assignee, due date, and status cycling (Open → In Progress → Done)
+- 🗳️ **Decisions** — record key decisions taken in each meeting
+- 👥 **Participants** — rich participant list with avatar initials and role (facilitator / attendee)
+- 🔍 **Search & Filter** — search across titles, notes, decisions, tasks, and participants; filter by Completed / Upcoming
+- ⏱️ **Smart Status** — meetings auto-transition from *Upcoming* → *Completed* when their datetime passes, on every refresh
+- 🗑️ **Delete** — permanently remove meetings with confirmation
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Vanilla HTML5, CSS3, JavaScript (ES6+) |
+| Fonts | DM Serif Display + DM Sans (Google Fonts) |
+| Backend | Node.js + Express.js |
+| Database | MongoDB + Mongoose |
+| Auth | JWT + bcryptjs |
+
+---
 
 ## Project Structure
 
-The project is divided into two main parts:
-- `backend/`: A Node.js and Express server with MongoDB.
-- `frontend/`: A vanilla HTML, CSS, and JavaScript user interface.
+```
+MeetFlow-B/
+├── backend/
+│   ├── config/         # MongoDB connection
+│   ├── controllers/    # meetingController, authController
+│   ├── middleware/     # JWT auth middleware
+│   ├── models/         # Meeting.js, User.js
+│   ├── routes/         # meetings.js, auth.js
+│   ├── .env            # Environment variables (not committed)
+│   └── server.js
+├── frontend/
+│   ├── css/style.css
+│   ├── js/
+│   │   ├── app.js      # Main UI logic
+│   │   └── api.js      # API client (fetch wrapper)
+│   └── index.html
+└── README.md
+```
+
+---
+
+## Prerequisites
+
+- **Node.js** v14+
+- **npm**
+- **MongoDB** (local instance or [MongoDB Atlas](https://www.mongodb.com/atlas))
+
+---
 
 ## Installation & Setup
 
-1. **Clone the repository** (if you haven't already):
-   ```bash
-   git clone <repository-url>
-   cd MeetFlow-B
-   ```
+### 1. Clone the repository
 
-2. **Set up the Backend**:
-   Navigate to the backend directory and install the dependencies.
-   ```bash
-   cd backend
-   npm install
-   ```
+```bash
+git clone <repository-url>
+cd MeetFlow-B
+```
 
-3. **Configure Environment Variables**:
-   In the `backend/` directory, create a `.env` file (or use the existing one) and add the following variables:
-   ```env
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   ```
-   *(Note: For local testing, a default `JWT_SECRET` is used if not provided, but it's highly recommended to set one.)*
+### 2. Install backend dependencies
 
-## How to Run the App
-
-You need to run both the backend server and the frontend client.
-
-### Step 1: Start the Backend Server
-
-Open a terminal and run the following commands:
 ```bash
 cd backend
-npm start
-# OR
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file inside the `backend/` directory:
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string_here
+JWT_SECRET=your_strong_jwt_secret_here
+```
+
+---
+
+## Running the App
+
+### Step 1 — Start the backend
+
+```bash
+cd backend
 node server.js
 ```
-You should see a message indicating the server has started (e.g., `Server started on port 5000`) and connected to the database.
 
-### Step 2: Start the Frontend
+You should see:
+```
+Server started on port 5000
+MongoDB Connected
+```
 
-The frontend is built with vanilla web technologies, so there is no complex build process required. 
+### Step 2 — Serve the frontend
 
-You have a few options to run it:
-- **Option A (VS Code Live Server)**: If you use VS Code, install the "Live Server" extension, right-click on `frontend/index.html`, and select "Open with Live Server".
-- **Option B (Python Simple HTTP Server)**: Open a new terminal in the `frontend/` directory and run:
-  ```bash
-  cd frontend
-  python3 -m http.server 8000
-  ```
-  Then open your browser and navigate to `http://localhost:8000`.
-- **Option C (Direct Open)**: You can simply double-click the `frontend/index.html` file to open it in your web browser. *(Note: Some features like CORS or routing might behave differently when opened directly via `file://` protocol, so a local server is recommended).*
+The frontend is pure HTML/JS — no build step needed.
+
+**Option A — VS Code Live Server** *(recommended)*
+Right-click `frontend/index.html` → *Open with Live Server*
+
+**Option B — Python**
+```bash
+cd frontend
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+**Option C — Direct file open**
+Double-click `frontend/index.html`. Note: direct `file://` access may have CORS restrictions with the backend.
+
+---
+
+## API Reference
+
+All meeting routes require `Authorization: Bearer <token>` header.
+
+### Auth
+
+| Method | Endpoint | Body | Description |
+|---|---|---|---|
+| POST | `/api/auth/signup` | `{ username, password }` | Register new user |
+| POST | `/api/auth/login` | `{ username, password }` | Login, returns JWT |
+
+### Meetings
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/meetings` | List all meetings (supports `?search=` and `?status=`) |
+| GET | `/api/meetings/:id` | Get a specific meeting |
+| POST | `/api/meetings` | Create a new meeting |
+| PATCH | `/api/meetings/:id` | Update any fields (minutes, decisions, actionItems, status, etc.) |
+| DELETE | `/api/meetings/:id` | Permanently delete a meeting |
+
+---
 
 ## Usage
 
-1. Open the frontend application in your browser.
-2. Sign up for a new account or log in with existing credentials.
-3. Start creating and managing your meetings and tasks!
+1. Open the app in your browser and **sign up** or **log in**
+2. Click **+ New Meeting** to create a record — set title, date, time (clock picker), facilitator, participants, duration, notes, and decisions
+3. Select a meeting from the sidebar to open the **detail panel**
+4. Use the **Minutes / Decisions / Tasks / Participants** tabs to manage content inline
+5. Tasks can be toggled done or cycled through Open → In Progress → Done by clicking the status badge
+6. Meetings auto-update to **Completed** once their date and time has passed

@@ -1,69 +1,104 @@
-# MeetFlow Documentation
+# MeetFlow — Technical Documentation
 
 ## Overview
-MeetFlow is a full-stack web application tailored for managing meetings, taking minutes, and tracking action items. It features a robust Node.js backend using Express and MongoDB, coupled with a lightweight, fast, vanilla HTML/JS/CSS frontend.
+
+MeetFlow is a full-stack web application for managing meetings, recording minutes, tracking decisions, and managing action items. It uses a Node.js/Express backend with MongoDB, and a vanilla HTML/CSS/JS frontend styled with DM Serif Display and DM Sans fonts.
+
+---
 
 ## Architecture
-The application follows a standard Client-Server architecture:
-- **Frontend (Client)**: Built entirely with vanilla HTML, CSS, and JavaScript. It communicates with the backend via RESTful APIs using the standard `fetch` API.
-- **Backend (Server)**: A Node.js server using the Express framework. It handles business logic, routing, authentication, and database interactions.
-- **Database**: MongoDB is used as the primary database, utilizing Mongoose as the Object Data Modeling (ODM) library.
 
-## Core Features
-1. **User Authentication**: Secure signup and login functionality using JSON Web Tokens (JWT) and bcrypt for password hashing.
-2. **Meeting Management**: Create, read, and manage meeting records, including details such as meeting title, date, time, attendees, and minutes.
-3. **Task Tracking**: Assign and manage action items/tasks associated with meetings.
-4. **Data Privacy**: Users can only access and manage their own meetings and tasks.
+**Client-Server (MEN Stack)**
+
+- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+). Communicates with the backend via a thin `Api` class (`api.js`) using the native `fetch` API. No frameworks or build tools required.
+- **Backend**: Node.js + Express.js. Handles routing, JWT auth middleware, business logic, and MongoDB interactions via Mongoose.
+- **Database**: MongoDB. All user data is isolated per authenticated user using `createdBy` references.
+
+---
 
 ## Database Models
 
-### 1. User Model
-Stores user credentials and profile information.
-- `username` (String, required)
-- `email` (String, required, unique)
-- `password` (String, required, hashed)
+### User
+| Field | Type | Notes |
+|---|---|---|
+| `username` | String | Required, unique |
+| `password` | String | Hashed with bcryptjs |
 
-### 2. Meeting Model
-Stores information about individual meetings.
-- `user` (ObjectId, references User)
-- `title` (String, required)
-- `date` (Date, required)
-- `time` (String)
-- `attendees` (Array of Strings)
-- `minutes` (String)
+### Meeting
+| Field | Type | Notes |
+|---|---|---|
+| `title` | String | Required |
+| `date` | String | `YYYY-MM-DD` format |
+| `time` | String | `H:MM AM/PM` format (e.g. `2:30 PM`) |
+| `status` | String | `upcoming`, `completed`, `in-progress`, `cancelled` |
+| `participants` | Array | Subdocuments: `{ name, role, initials, color }` |
+| `minutes` | String | Duration (e.g. `1 hr 30 min`) |
+| `notes` | String | Free-text meeting notes |
+| `decisions` | Array | Array of decision strings |
+| `actionItems` | Array | Subdocuments: `{ text, assignee, due, status }` |
+| `createdBy` | ObjectId | References User |
 
-### 3. Task Model
-Stores action items or tasks.
-- `user` (ObjectId, references User)
-- `meetingId` (ObjectId, references Meeting)
-- `description` (String, required)
-- `status` (String, enum: ['Pending', 'In Progress', 'Completed'])
-- `dueDate` (Date)
+#### actionItem status values
+`open` | `in-progress` | `done`
+
+#### meeting status values
+`upcoming` | `completed` | `in-progress` | `cancelled`
+
+> **Auto-status**: On every `GET /api/meetings`, any `upcoming` meeting whose date+time has already passed is automatically updated to `completed` in the database before the response is returned.
+
+---
 
 ## API Endpoints
 
-The backend exposes several REST API endpoints prefixed with `/api`.
+All routes under `/api/meetings` require `Authorization: Bearer <jwt_token>`.
 
-### Authentication (`/api/auth`)
-- **POST** `/api/auth/register` - Register a new user. Expects `username`, `email`, and `password`. Returns a JWT token.
-- **POST** `/api/auth/login` - Authenticate an existing user. Expects `email` and `password`. Returns a JWT token.
+### Auth — `/api/auth`
 
-### Meetings (`/api/meetings`)
-*(All meeting endpoints require a valid JWT token in the `Authorization` header)*
-- **GET** `/api/meetings` - Fetch all meetings belonging to the authenticated user.
-- **POST** `/api/meetings` - Create a new meeting. Expects meeting details in the body.
-- **GET** `/api/meetings/:id` - Fetch details of a specific meeting.
-- **PUT** `/api/meetings/:id` - Update a specific meeting.
-- **DELETE** `/api/meetings/:id` - Delete a specific meeting.
+| Method | Path | Body | Response |
+|---|---|---|---|
+| POST | `/signup` | `{ username, password }` | `{ token, username }` |
+| POST | `/login` | `{ username, password }` | `{ token, username }` |
 
-### Tasks (`/api/tasks`)
-*(All task endpoints require a valid JWT token in the `Authorization` header)*
-- **GET** `/api/tasks` - Fetch all tasks belonging to the authenticated user.
-- **POST** `/api/tasks` - Create a new task.
-- **PUT** `/api/tasks/:id` - Update an existing task (e.g., change status).
-- **DELETE** `/api/tasks/:id` - Delete a specific task.
+### Meetings — `/api/meetings`
 
-## Security Mechanisms
-- **Password Hashing**: User passwords are encrypted using `bcryptjs` before being stored in the database.
-- **JWT Authorization**: Sensitive API routes are protected by a custom authentication middleware that verifies the JWT token sent in the `Authorization` header (Format: `Bearer <token>`).
-- **CORS**: Cross-Origin Resource Sharing is enabled to allow the frontend to interact seamlessly with the backend server running on a different port.
+| Method | Path | Query / Body | Description |
+|---|---|---|---|
+| GET | `/` | `?search=`, `?status=` | List user's meetings; auto-corrects stale statuses |
+| GET | `/:id` | — | Fetch one meeting |
+| POST | `/` | Full meeting object | Create a meeting |
+| PATCH | `/:id` | Any subset of meeting fields | Inline update (minutes, decisions, actionItems, status, etc.) |
+| DELETE | `/:id` | — | Permanently delete |
+
+> There is **no separate `/api/tasks` route** — tasks (`actionItems`) are embedded in the Meeting document and managed via `PATCH /api/meetings/:id`.
+
+---
+
+## Frontend Structure
+
+```
+frontend/
+├── index.html      # Single-page app shell (auth + master-detail layout)
+├── css/style.css   # Full design system (DM fonts, light theme, badges, layout)
+└── js/
+    ├── api.js      # Api class: login, signup, getMeetings, createMeeting, updateMeeting, deleteMeeting
+    └── app.js      # All UI logic: auth, sidebar, chips, tabs, inline edits, task cycling
+```
+
+### Key UI Behaviours
+
+- **New Meeting form**: clock picker for time, participant chip tags (add/remove), duration dropdown with Custom option, separate Minutes (duration) and Notes fields, decisions (comma-separated).
+- **Status auto-derive on create**: frontend computes `upcoming` vs `completed` from the full `date + time` datetime at moment of creation.
+- **Tabbed detail panel**: Minutes (editable), Decisions (add inline), Tasks (add/toggle done/cycle status), Participants (avatar list).
+- **Sidebar stats**: live counts of total meetings, open tasks, and meetings this month.
+
+---
+
+## Security
+
+| Mechanism | Implementation |
+|---|---|
+| Password hashing | `bcryptjs` — passwords never stored in plain text |
+| Authentication | JWT signed with `JWT_SECRET`; sent as `Authorization: Bearer <token>` |
+| Route protection | Custom `auth` middleware validates token on all meeting routes |
+| Data isolation | All queries filter by `createdBy: req.user.id` |
+| CORS | Enabled globally via `cors` middleware |

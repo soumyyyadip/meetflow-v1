@@ -2,180 +2,249 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MeetFlow - Meeting & Task Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MeetFlow — Meeting Records & Action Items</title>
+  <meta name="description" content="MeetFlow: your personal meeting records, minutes, decisions, and action item tracker." />
   <link rel="stylesheet" href="./css/style.css" />
-  <!-- Google Fonts for modern typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- AUTH VIEW -->
-  <div id="auth-view" class="view auth-container active-view">
+  <!-- ═══════════════════════════════════════
+       AUTH VIEW
+  ════════════════════════════════════════════ -->
+  <div id="auth-view">
     <div class="auth-box">
-      <h2>MeetFlow</h2>
-      <p class="auth-subtitle">Login or register to view your private meetings.</p>
+      <h1>Minutes —</h1>
+      <p class="auth-sub">Sign in to access your meeting records.</p>
       <form id="auth-form">
-        <div class="form-group">
-          <input type="text" id="auth-username" placeholder="Username" required>
+        <div class="form-field">
+          <input type="text" id="auth-username" placeholder="Username" required />
         </div>
-        <div class="form-group">
-          <input type="password" id="auth-password" placeholder="Password" required>
+        <div class="form-field">
+          <input type="password" id="auth-password" placeholder="Password" required />
         </div>
-        <div class="auth-actions" style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
-          <button type="submit" id="main-auth-btn" class="btn primary" style="width: 100%; padding: 10px;">Login</button>
-          <p style="font-size: 13px; color: var(--text-muted);">
-            <span id="auth-toggle-msg">Don't have an account?</span> 
-            <a href="#" id="auth-toggle-link" style="color: var(--primary); text-decoration: none;">Signup</a>
-          </p>
-        </div>
+        <p class="auth-error" id="auth-error"></p>
+        <button type="submit" id="auth-submit-btn" class="btn-primary">Login</button>
       </form>
-      <div id="auth-error" style="color:var(--status-pending); margin-top:10px; font-size:13px;"></div>
+      <p class="auth-toggle">
+        <span id="auth-toggle-msg">Don't have an account?</span>
+        <a href="#" id="auth-toggle-link">Sign up</a>
+      </p>
     </div>
   </div>
 
-  <!-- MAIN APP CONTAINER -->
-  <div id="app-container" style="display: none; height: 100vh; width: 100%;">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="logo">
-        <h2>MeetFlow</h2>
+  <!-- ═══════════════════════════════════════
+       MAIN APP (hidden until logged in)
+  ════════════════════════════════════════════ -->
+  <div id="app-shell" style="display:none;">
+
+    <!-- ── SIDEBAR ───────────────────────────── -->
+    <aside id="sidebar">
+
+      <div class="sidebar-logo">
+        <h1><span>Minutes</span> —</h1>
+        <p>Meeting records &amp; action items</p>
       </div>
-      <nav>
-        <ul>
-          <li class="active" data-target="dashboard-view">Dashboard</li>
-          <li data-target="meetings-view">Meetings</li>
-          <li data-target="tasks-view">Tasks</li>
-          <li id="btn-logout" style="margin-top: auto; color: var(--status-pending);">Logout</li>
-        </ul>
-      </nav>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-meetings">0</div>
+          <div class="stat-lbl">Meetings</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-open-tasks">0</div>
+          <div class="stat-lbl">Open tasks</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-this-month">0</div>
+          <div class="stat-lbl">This month</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search meetings, decisions, action items…" />
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+      </div>
+
+      <!-- Meeting list -->
+      <div id="meetings-list-wrap">
+        <p class="no-meetings-msg" id="no-meetings-msg" style="display:none;">No meetings found.</p>
+        <!-- Meeting cards injected by JS -->
+      </div>
+
+      <!-- Logout + New meeting -->
+      <div class="new-meeting-btn-wrap">
+        <button id="btn-logout" style="width:100%; padding:7px; margin-bottom:8px; background:none; border:1px solid #E9ECEF; border-radius:8px; color:#868E96; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer;">Logout</button>
+        <button id="btn-new-meeting">+ New Meeting</button>
+      </div>
+
     </aside>
 
-    <!-- Main Content Wrapper -->
-  <main class="main-content">
-    <header class="topbar">
-      <h1>Dashboard</h1>
-      <div class="search-bar">
-        <input type="text" id="global-search" placeholder="Search meetings..." />
-        <button id="search-btn" class="btn secondary">Search</button>
+    <!-- ── MAIN CONTENT ───────────────────────── -->
+    <main id="main-content">
+
+      <!-- Empty state -->
+      <div class="empty-detail fade-in" id="empty-detail">
+        <div class="empty-icon">📋</div>
+        <p>Select a meeting to view details</p>
+        <span>or create a new one to get started</span>
       </div>
-    </header>
 
-    <!-- VIEWS -->
-    <div class="views">
-      
-      <!-- DASHBOARD VIEW -->
-      <section id="dashboard-view" class="view active-view">
-        <div class="stats-row">
-          <div class="stat-card">
-            <h3>Total Meetings</h3>
-            <p id="stat-meetings">0</p>
+      <!-- New meeting form -->
+      <div id="new-meeting-panel">
+        <h2>New Meeting</h2>
+        <p class="sub">Fill in the details to create a new meeting record.</p>
+        <div class="nm-field">
+          <input type="text" id="nm-title" class="nm-title" placeholder="Meeting title *" />
+        </div>
+        <div class="nm-row">
+          <div class="nm-field">
+            <input type="date" id="nm-date" />
           </div>
-          <div class="stat-card">
-            <h3>Pending Tasks</h3>
-            <p id="stat-tasks-pending">0</p>
+          <div class="nm-field">
+            <input type="time" id="nm-time" />
           </div>
         </div>
-        
-        <div class="recent-section">
-          <div class="recent-header">
-            <h2>Recent Meetings</h2>
-            <button class="btn primary" id="btn-new-meeting">New Meeting</button>
-          </div>
-          <div class="meetings-list" id="dashboard-meetings-list">
-            <!-- Populated via JS -->
-            <p class="empty-state">Loading meetings...</p>
+        <div class="nm-field">
+          <input type="text" id="nm-facilitator" placeholder="Facilitator name (optional)" />
+        </div>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Participants</label>
+          <div id="nm-participants-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:7px;"></div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="nm-participant-input" placeholder="Add participant name, press Enter" style="flex:1; padding:9px 12px; border:1.5px solid #E9ECEF; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#FAFAFA; outline:none;" />
+            <button type="button" id="btn-add-participant" style="padding:9px 14px; background:#2D6A4F; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap;">Add</button>
           </div>
         </div>
-      </section>
-
-      <!-- MEETINGS VIEW -->
-      <section id="meetings-view" class="view">
-        <div class="view-header">
-          <h2>All Meetings</h2>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Duration (Meeting Minutes)</label>
+          <select id="nm-minutes" style="width:100%; padding:9px 12px; border:1.5px solid #E9ECEF; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#FAFAFA; outline:none; cursor:pointer; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23868E96' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 12px center;">
+            <option value="">Select duration (optional)</option>
+            <option value="15 min">15 minutes</option>
+            <option value="30 min">30 minutes</option>
+            <option value="45 min">45 minutes</option>
+            <option value="1 hr">1 hour</option>
+            <option value="1 hr 15 min">1 hour 15 minutes</option>
+            <option value="1 hr 30 min">1 hour 30 minutes</option>
+            <option value="1 hr 45 min">1 hour 45 minutes</option>
+            <option value="2 hrs">2 hours</option>
+            <option value="2 hrs 30 min">2 hours 30 minutes</option>
+            <option value="3 hrs">3 hours</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <input type="text" id="nm-minutes-custom" placeholder="e.g. 90 mins, 2.5 hours" style="display:none; width:100%; margin-top:8px; padding:9px 12px; border:1.5px solid #2D6A4F; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#F8FFF9; outline:none;" />
         </div>
-        <div class="meetings-list" id="all-meetings-list">
-          <!-- Populated via JS -->
-        </div>
-      </section>
-
-      <!-- TASKS VIEW -->
-      <section id="tasks-view" class="view">
-        <div class="view-header">
-          <h2>Action Items / Tasks</h2>
-        </div>
-        <div class="tasks-table-container">
-          <table class="tasks-table">
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Assignee</th>
-                <th>Meeting</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="tasks-tbody">
-              <!-- Populated via JS -->
-              <tr><td colspan="5" class="empty-state">Loading tasks...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
-  </main>
-  </div> <!-- END app-container -->
-
-  <!-- Modals -->
-
-  <!-- Create Meeting Modal -->
-  <div class="modal-overlay" id="create-meeting-modal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Record New Meeting</h2>
-        <button class="close-modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="create-meeting-form">
-          <div class="form-group">
-            <label for="m-title">Meeting Title</label>
-            <input type="text" id="m-title" required>
-          </div>
-          <div class="form-group">
-            <label for="m-date">Date & Time</label>
-            <input type="datetime-local" id="m-date" required>
-          </div>
-          <div class="form-group">
-            <label for="m-participants">Participants (comma separated)</label>
-            <input type="text" id="m-participants">
-          </div>
-          <div class="form-group">
-            <label for="m-minutes">Minutes / Notes</label>
-            <textarea id="m-minutes" rows="4"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="m-decisions">Decisions (comma separated)</label>
-            <input type="text" id="m-decisions">
-          </div>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Meeting Notes</label>
           
-          <div class="tasks-section">
-            <h3>Assigned Tasks</h3>
-            <div id="m-tasks-container">
-              <!-- Task inputs added here -->
+          <textarea id="nm-notes" rows="3" placeholder="Additional notes, context, follow-ups…"></textarea>
+        </div>
+        <div class="nm-field">
+          <input type="text" id="nm-decisions" placeholder="Decisions, comma-separated (optional)" />
+        </div>
+        <div class="nm-actions">
+          <button class="btn-primary" id="btn-create-meeting">Create Meeting</button>
+          <button class="btn-cancel-nm" id="btn-cancel-new-meeting">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div id="detail-panel" class="fade-in" style="display:none;">
+
+        <div class="detail-header">
+          <div class="detail-header-top">
+            <h2 id="detail-title">Meeting Title</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="btn-delete-meeting" title="Delete meeting permanently" style="background:none; border:1px solid #FFB3B3; border-radius:6px; color:#C92A2A; font-size:12px; font-family:'DM Sans',sans-serif; padding:4px 10px; cursor:pointer; transition:all 0.15s;">Delete</button>
+              <button id="btn-close-detail">×</button>
             </div>
-            <button type="button" class="btn secondary btn-sm" id="btn-add-task">+ Add Task</button>
+          </div>
+          <div class="detail-meta">
+            <span id="detail-badge"></span>
+            <span id="detail-datetime"></span>
+          </div>
+          <div class="detail-tabs">
+            <button class="tab-btn active" data-tab="minutes">Minutes</button>
+            <button class="tab-btn" data-tab="decisions">Decisions</button>
+            <button class="tab-btn" data-tab="tasks">Tasks</button>
+            <button class="tab-btn" data-tab="participants">Participants</button>
+          </div>
+        </div>
+
+        <div class="detail-body">
+
+          <!-- Minutes Tab -->
+          <div class="tab-pane active" id="tab-minutes">
+            <div class="minutes-header">
+              <p class="section-label">Meeting Duration</p>
+              <div id="minutes-actions">
+                <button class="btn-outline-sm" id="btn-edit-minutes">Edit</button>
+              </div>
+              <div id="minutes-save-actions" style="display:none; gap:6px; display:none;">
+                <button class="btn-green-sm" id="btn-save-minutes">Save</button>
+                <button class="btn-ghost-sm" id="btn-cancel-minutes">Cancel</button>
+              </div>
+            </div>
+            <p class="minutes-text" id="minutes-display">No minutes recorded yet. Click Edit to add notes.</p>
+            <textarea class="detail-textarea" id="minutes-editor" placeholder="Type meeting notes here…"></textarea>
           </div>
 
-          <div class="modal-actions">
-            <button type="submit" class="btn primary">Save Meeting</button>
+          <!-- Decisions Tab -->
+          <div class="tab-pane" id="tab-decisions">
+            <p class="section-label">Decisions Taken</p>
+            <div id="decisions-list"></div>
+            <div class="add-row">
+              <input class="detail-input" type="text" id="new-decision-input" placeholder="Record a decision…" />
+              <button class="btn-add" id="btn-add-decision">Add</button>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
-  </div>
+
+          <!-- Tasks Tab -->
+          <div class="tab-pane" id="tab-tasks">
+            <div class="tasks-header">
+              <p class="section-label">Action Items</p>
+              <button class="btn-outline-sm" id="btn-toggle-task-form">+ New Task</button>
+            </div>
+            <div class="task-form-box" id="task-form-box">
+              <input class="detail-input" type="text" id="new-task-text" placeholder="Task description" />
+              <div class="task-form-row">
+                <input class="detail-input" type="text" id="new-task-assignee" placeholder="Assignee name" style="flex:1;" />
+                <input class="detail-input" type="date" id="new-task-due" style="flex:1;" />
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-add" id="btn-add-task">Add Task</button>
+                <button class="btn-ghost-sm" id="btn-cancel-task-form">Cancel</button>
+              </div>
+            </div>
+            <div id="tasks-list"></div>
+          </div>
+
+          <!-- Participants Tab -->
+          <div class="tab-pane" id="tab-participants">
+            <p class="section-label">Participants</p>
+            <div id="participants-list"></div>
+          </div>
+
+        </div><!-- /.detail-body -->
+      </div><!-- /#detail-panel -->
+
+    </main>
+
+  </div><!-- /#app-shell -->
 
   <script src="./js/api.js"></script>
   <script src="./js/app.js"></script>

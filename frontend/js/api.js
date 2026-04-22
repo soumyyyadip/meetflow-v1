@@ -30,33 +30,37 @@ class Api {
     return data;
   }
 
-  async getMeetings(search = '') {
-    const url = search ? `${API_BASE_URL}/meetings?search=${encodeURIComponent(search)}` : `${API_BASE_URL}/meetings`;
+  async getMeetings(search = '', status = 'all') {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (status && status !== 'all') params.set('status', status);
+    const url = `${API_BASE_URL}/meetings${params.toString() ? '?' + params : ''}`;
     const res = await fetch(url, { headers: this.getHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch meetings');
     return data;
   }
 
-  async createMeeting(data) {
+  async createMeeting(payload) {
     const res = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     });
-    const resData = await res.json();
-    if (!res.ok) throw new Error(resData.error || 'Failed to create meeting');
-    return resData;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create meeting');
+    return data;
   }
 
-  async cancelMeeting(id) {
-    const res = await fetch(`${API_BASE_URL}/meetings/${id}/cancel`, {
-      method: 'PUT',
-      headers: this.getHeaders()
+  async updateMeeting(id, updates) {
+    const res = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      body: JSON.stringify(updates)
     });
-    const resData = await res.json();
-    if (!res.ok) throw new Error(resData.error || 'Failed to cancel meeting');
-    return resData;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update meeting');
+    return data;
   }
 
   async deleteMeeting(id) {
@@ -64,27 +68,9 @@ class Api {
       method: 'DELETE',
       headers: this.getHeaders()
     });
-    const resData = await res.json();
-    if (!res.ok) throw new Error(resData.error || 'Failed to delete meeting');
-    return resData;
-  }
-
-  async getTasks() {
-    const res = await fetch(`${API_BASE_URL}/tasks`, { headers: this.getHeaders() });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch tasks');
+    if (!res.ok) throw new Error(data.error || 'Failed to delete meeting');
     return data;
-  }
-
-  async updateTaskStatus(taskId, status) {
-    const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
-      method: 'PUT',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ status })
-    });
-    const resData = await res.json();
-    if (!res.ok) throw new Error(resData.error || 'Failed to update task status');
-    return resData;
   }
 }
 

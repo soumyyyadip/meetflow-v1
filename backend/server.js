@@ -4,7 +4,6 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 const meetingRoutes = require('./routes/meetings');
-const taskRoutes = require('./routes/tasks');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -19,7 +18,6 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/meetings', meetingRoutes);
-app.use('/api/tasks', taskRoutes);
 
 // Fallback Route
 app.use((req, res) => {

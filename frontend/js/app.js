@@ -1,59 +1,187 @@
+/* ============================================================
+   MeetFlow — Master-Detail App Logic
+   Mirrors the MeetingDashboard.jsx React component behavior
+   ============================================================ */
+
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ---- Auth Logic ----
-  const authView = document.getElementById('auth-view');
-  const appContainer = document.getElementById('app-container');
-  const authForm = document.getElementById('auth-form');
-  const mainAuthBtn = document.getElementById('main-auth-btn');
+  // ─── State ────────────────────────────────────────────────
+  let meetings = [];
+  let selectedMeeting = null;
+  let activeFilter = 'all';
+  let searchQuery = '';
+  let activeTab = 'minutes';
+  let editingMinutes = false;
+  let showTaskForm = false;
+  let authMode = 'login'; // 'login' | 'signup'
+
+  // ─── Element refs ──────────────────────────────────────────
+  const authView       = document.getElementById('auth-view');
+  const appShell       = document.getElementById('app-shell');
+  const authForm       = document.getElementById('auth-form');
+  const authError      = document.getElementById('auth-error');
+  const authSubmitBtn  = document.getElementById('auth-submit-btn');
   const authToggleLink = document.getElementById('auth-toggle-link');
-  const authToggleMsg = document.getElementById('auth-toggle-msg');
-  const authError = document.getElementById('auth-error');
-  const btnLogout = document.getElementById('btn-logout');
+  const authToggleMsg  = document.getElementById('auth-toggle-msg');
+  const btnLogout      = document.getElementById('btn-logout');
 
-  let activeAuthMode = 'login'; // 'login' or 'signup'
+  const statMeetings   = document.getElementById('stat-meetings');
+  const statOpenTasks  = document.getElementById('stat-open-tasks');
+  const statThisMonth  = document.getElementById('stat-this-month');
 
+  const searchInput    = document.getElementById('search-input');
+  const filterBtns     = document.querySelectorAll('.filter-btn');
+  const meetingsWrap   = document.getElementById('meetings-list-wrap');
+  const noMeetingsMsg  = document.getElementById('no-meetings-msg');
+
+  const emptyDetail    = document.getElementById('empty-detail');
+  const detailPanel    = document.getElementById('detail-panel');
+  const newMeetingPanel = document.getElementById('new-meeting-panel');
+
+  const detailTitle    = document.getElementById('detail-title');
+  const detailBadge    = document.getElementById('detail-badge');
+  const detailDatetime = document.getElementById('detail-datetime');
+  const btnCloseDetail = document.getElementById('btn-close-detail');
+
+  const tabBtns        = document.querySelectorAll('.tab-btn');
+
+  // Minutes
+  const minutesDisplay = document.getElementById('minutes-display');
+  const minutesEditor  = document.getElementById('minutes-editor');
+  const btnEditMinutes = document.getElementById('btn-edit-minutes');
+  const minutesActions = document.getElementById('minutes-actions');
+  const minutesSaveActions = document.getElementById('minutes-save-actions');
+  const btnSaveMinutes     = document.getElementById('btn-save-minutes');
+  const btnCancelMinutes   = document.getElementById('btn-cancel-minutes');
+
+  // Decisions
+  const decisionsList   = document.getElementById('decisions-list');
+  const newDecisionInput = document.getElementById('new-decision-input');
+  const btnAddDecision   = document.getElementById('btn-add-decision');
+
+  // Tasks
+  const tasksList           = document.getElementById('tasks-list');
+  const btnToggleTaskForm   = document.getElementById('btn-toggle-task-form');
+  const taskFormBox         = document.getElementById('task-form-box');
+  const newTaskText         = document.getElementById('new-task-text');
+  const newTaskAssignee     = document.getElementById('new-task-assignee');
+  const newTaskDue          = document.getElementById('new-task-due');
+  const btnAddTask          = document.getElementById('btn-add-task');
+  const btnCancelTaskForm   = document.getElementById('btn-cancel-task-form');
+
+  // Participants
+  const participantsList = document.getElementById('participants-list');
+
+  // New meeting
+  const btnNewMeeting     = document.getElementById('btn-new-meeting');
+  const btnCancelNew      = document.getElementById('btn-cancel-new-meeting');
+  const btnCreateMeeting  = document.getElementById('btn-create-meeting');
+  const nmTitle           = document.getElementById('nm-title');
+  const nmDate            = document.getElementById('nm-date');
+  const nmTime            = document.getElementById('nm-time');
+  const nmFacilitator     = document.getElementById('nm-facilitator');
+  const nmParticipantInput = document.getElementById('nm-participant-input');
+  const nmParticipantsChips = document.getElementById('nm-participants-chips');
+  const btnAddParticipant  = document.getElementById('btn-add-participant');
+  const nmMinutes         = document.getElementById('nm-minutes');
+  const nmMinutesCustom   = document.getElementById('nm-minutes-custom');
+  const nmNotes           = document.getElementById('nm-notes');
+  const nmDecisions       = document.getElementById('nm-decisions');
+
+  // ─── Participant chips state ───────────────────────────────
+  let nmParticipants = []; // array of { name, role, initials, color }
+  const CHIP_COLORS = ['#40916C','#9B2226','#1864AB','#CA6702','#5C4033','#AE2012','#1B4332','#7D4E00'];
+
+  function addParticipantChip(name) {
+    name = name.trim();
+    if (!name || nmParticipants.some(p => p.name.toLowerCase() === name.toLowerCase())) return;
+    const color = CHIP_COLORS[nmParticipants.length % CHIP_COLORS.length];
+    const p = { name, role: 'attendee', initials: initials(name), color };
+    nmParticipants.push(p);
+    renderParticipantChips();
+  }
+
+  function removeParticipantChip(name) {
+    nmParticipants = nmParticipants.filter(p => p.name !== name);
+    renderParticipantChips();
+  }
+
+  function renderParticipantChips() {
+    nmParticipantsChips.innerHTML = '';
+    nmParticipants.forEach(p => {
+      const chip = document.createElement('span');
+      chip.style.cssText = `display:inline-flex; align-items:center; gap:5px; padding:3px 10px 3px 8px; background:${p.color}18; border:1px solid ${p.color}44; border-radius:20px; font-size:12px; font-family:'DM Sans',sans-serif; color:#1a1a1a;`;
+      chip.innerHTML = `
+        <span style="width:18px;height:18px;border-radius:50%;background:${p.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">${escHtml(p.initials)}</span>
+        ${escHtml(p.name)}
+        <button type="button" style="background:none;border:none;cursor:pointer;color:#868E96;font-size:14px;line-height:1;padding:0;margin-left:2px;" data-name="${escHtml(p.name)}">&times;</button>
+      `;
+      chip.querySelector('button').addEventListener('click', () => removeParticipantChip(p.name));
+      nmParticipantsChips.appendChild(chip);
+    });
+  }
+
+  btnAddParticipant.addEventListener('click', () => {
+    addParticipantChip(nmParticipantInput.value);
+    nmParticipantInput.value = '';
+    nmParticipantInput.focus();
+  });
+
+  nmParticipantInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addParticipantChip(nmParticipantInput.value);
+      nmParticipantInput.value = '';
+    }
+  });
+
+  // Show/hide custom duration input
+  nmMinutes.addEventListener('change', () => {
+    const isCustom = nmMinutes.value === 'custom';
+    nmMinutesCustom.style.display = isCustom ? 'block' : 'none';
+    if (isCustom) nmMinutesCustom.focus();
+  });
+
+  // ─── Auth ─────────────────────────────────────────────────
   function checkAuth() {
-    const token = localStorage.getItem('token');
-    if (token) {
+    if (localStorage.getItem('token')) {
       authView.style.display = 'none';
-      appContainer.style.display = 'flex';
-      loadDashboard();
+      appShell.style.display = 'flex';
+      loadMeetings();
     } else {
       authView.style.display = 'flex';
-      appContainer.style.display = 'none';
+      appShell.style.display = 'none';
     }
   }
 
-  function renderAuthMode() {
-    if (activeAuthMode === 'login') {
-      mainAuthBtn.textContent = 'Login';
+  function setAuthMode(mode) {
+    authMode = mode;
+    if (mode === 'login') {
+      authSubmitBtn.textContent = 'Login';
       authToggleMsg.textContent = "Don't have an account?";
-      authToggleLink.textContent = "Signup";
+      authToggleLink.textContent = 'Sign up';
     } else {
-      mainAuthBtn.textContent = 'Signup';
-      authToggleMsg.textContent = "Already have an account?";
-      authToggleLink.textContent = "Login";
+      authSubmitBtn.textContent = 'Sign up';
+      authToggleMsg.textContent = 'Already have an account?';
+      authToggleLink.textContent = 'Login';
     }
     authError.textContent = '';
   }
 
-  authToggleLink.addEventListener('click', (e) => {
+  authToggleLink.addEventListener('click', e => {
     e.preventDefault();
-    activeAuthMode = activeAuthMode === 'login' ? 'signup' : 'login';
-    renderAuthMode();
+    setAuthMode(authMode === 'login' ? 'signup' : 'login');
   });
 
-  authForm.addEventListener('submit', async (e) => {
+  authForm.addEventListener('submit', async e => {
     e.preventDefault();
     authError.textContent = '';
     const u = document.getElementById('auth-username').value.trim();
     const p = document.getElementById('auth-password').value.trim();
-
     try {
-      let res;
-      if (activeAuthMode === 'login') res = await window.api.login(u, p);
-      else res = await window.api.signup(u, p);
-      
+      const res = authMode === 'login'
+        ? await window.api.login(u, p)
+        : await window.api.signup(u, p);
       localStorage.setItem('token', res.token);
       localStorage.setItem('username', res.username);
       authForm.reset();
@@ -66,290 +194,541 @@ document.addEventListener('DOMContentLoaded', () => {
   btnLogout.addEventListener('click', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    meetings = [];
+    selectedMeeting = null;
     checkAuth();
   });
 
-  // ---- Navigation ----
-  const navItems = document.querySelectorAll('.sidebar nav li[data-target]');
-  const views = document.querySelectorAll('.views section.view');
-
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      navItems.forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
-      const targetId = item.getAttribute('data-target');
-      
-      views.forEach(v => v.classList.remove('active-view'));
-      document.getElementById(targetId).classList.add('active-view');
-      
-      // Auto refresh data based on view
-      if(targetId === 'dashboard-view') loadDashboard();
-      if(targetId === 'meetings-view') loadAllMeetings();
-      if(targetId === 'tasks-view') loadTasks();
-    });
-  });
-
-  // ---- Modals ----
-  const btnNewMeeting = document.getElementById('btn-new-meeting');
-  const createMeetingModal = document.getElementById('create-meeting-modal');
-  const btnCloseModal = document.querySelector('.close-modal');
-
-  btnNewMeeting.addEventListener('click', () => {
-    createMeetingModal.style.display = 'flex';
-  });
-
-  btnCloseModal.addEventListener('click', () => {
-    createMeetingModal.style.display = 'none';
-  });
-
-  // Close modal on outside click
-  createMeetingModal.addEventListener('click', (e) => {
-    if(e.target === createMeetingModal) {
-      createMeetingModal.style.display = 'none';
-    }
-  });
-
-  // ---- Dynamic Tasks Input in Form ----
-  const btnAddTaskBox = document.getElementById('btn-add-task');
-  const tasksContainer = document.getElementById('m-tasks-container');
-
-  btnAddTaskBox.addEventListener('click', () => {
-    const row = document.createElement('div');
-    row.className = 'task-input-row';
-    row.innerHTML = `
-      <input type="text" placeholder="Task description" class="t-desc" required>
-      <input type="text" placeholder="Assignee" class="t-assign">
-      <button type="button" class="btn secondary btn-remove-task">X</button>
-    `;
-    tasksContainer.appendChild(row);
-
-    row.querySelector('.btn-remove-task').addEventListener('click', () => {
-      row.remove();
-    });
-  });
-
-  // ---- Form Submit ----
-  const createMeetingForm = document.getElementById('create-meeting-form');
-  createMeetingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const title = document.getElementById('m-title').value;
-    const date = document.getElementById('m-date').value;
-    const participantsStr = document.getElementById('m-participants').value;
-    const minutes = document.getElementById('m-minutes').value;
-    const decisionsStr = document.getElementById('m-decisions').value;
-
-    const participants = participantsStr.split(',').map(p => p.trim()).filter(p=>p);
-    const decisions = decisionsStr.split(',').map(d => d.trim()).filter(d=>d);
-
-    const taskRows = document.querySelectorAll('.task-input-row');
-    const tasks = [];
-    taskRows.forEach(row => {
-      const desc = row.querySelector('.t-desc').value.trim();
-      const assign = row.querySelector('.t-assign').value.trim();
-      if(desc) tasks.push({ description: desc, assignee: assign });
-    });
-
-    const payload = { title, date, participants, minutes, decisions, tasks };
-    
+  // ─── Data Loading ─────────────────────────────────────────
+  async function loadMeetings() {
     try {
-      await window.api.createMeeting(payload);
-      createMeetingForm.reset();
-      tasksContainer.innerHTML = ''; // clear tasks
-      createMeetingModal.style.display = 'none';
-      loadDashboard();
-    } catch(err) {
-      alert("Error: " + err.message);
-    }
-  });
-
-  // ---- Data Loaders ----
-  async function loadDashboard() {
-    try {
-      const meetings = await window.api.getMeetings();
-      const tasks = await window.api.getTasks();
-
-      document.getElementById('stat-meetings').textContent = meetings.length;
-      document.getElementById('stat-tasks-pending').textContent = tasks.filter(t => t.status !== 'Completed').length;
-
-      const listContainer = document.getElementById('dashboard-meetings-list');
-      listContainer.innerHTML = '';
-      
-      if(meetings.length === 0) {
-        listContainer.innerHTML = '<p class="empty-state">No meetings found.</p>';
-        return;
+      meetings = await window.api.getMeetings(searchQuery, activeFilter);
+      renderSidebar();
+      updateStats();
+      if (selectedMeeting) {
+        // Refresh the selected meeting from the new data
+        const refreshed = meetings.find(m => m._id === selectedMeeting._id);
+        if (refreshed) {
+          selectedMeeting = refreshed;
+          renderDetailPanel();
+        }
       }
-
-      // Display top 3 for dashboard
-      meetings.slice(0, 3).forEach(m => {
-        listContainer.appendChild(createMeetingCard(m));
-      });
-    } catch(err) {
-      console.error(err);
-      if (err.message.includes('token') || err.message.includes('denied')) checkAuth();
+    } catch (err) {
+      if (err.message && (err.message.includes('token') || err.message.includes('denied'))) {
+        checkAuth();
+      }
     }
   }
 
-  async function loadAllMeetings(search = '') {
-    try {
-      const meetings = await window.api.getMeetings(search);
-      const listContainer = document.getElementById('all-meetings-list');
-      listContainer.innerHTML = '';
-      
-      if(meetings.length === 0) {
-        listContainer.innerHTML = '<p class="empty-state">No meetings found.</p>';
-        return;
-      }
-
-      meetings.forEach(m => {
-        listContainer.appendChild(createMeetingCard(m));
-      });
-    } catch(err) {
-      console.error(err);
-    }
+  // ─── Stats ────────────────────────────────────────────────
+  function updateStats() {
+    statMeetings.textContent = meetings.length;
+    const openTasks = meetings.reduce((sum, m) =>
+      sum + (m.actionItems || []).filter(a => a.status !== 'done').length, 0);
+    statOpenTasks.textContent = openTasks;
+    statOpenTasks.className = 'stat-val' + (openTasks > 0 ? ' warn' : '');
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    statThisMonth.textContent = meetings.filter(m => m.date && m.date.startsWith(thisMonth)).length;
   }
 
-  async function loadTasks() {
-    try {
-      const tasks = await window.api.getTasks();
-      const tbody = document.getElementById('tasks-tbody');
-      tbody.innerHTML = '';
+  // ─── Sidebar Rendering ────────────────────────────────────
+  function renderSidebar() {
+    // Remove old cards
+    const oldCards = meetingsWrap.querySelectorAll('.meeting-card');
+    oldCards.forEach(c => c.remove());
 
-      if(tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No tasks assigned yet.</td></tr>';
-        return;
-      }
-
-      tasks.forEach(task => {
-        const tr = document.createElement('tr');
-        
-        const mTitle = task.meetingId ? task.meetingId.title : 'N/A';
-        const selectId = `status-select-${task._id}`;
-        
-        tr.innerHTML = `
-          <td>${task.description}</td>
-          <td>${task.assignee || 'Unassigned'}</td>
-          <td>${mTitle}</td>
-          <td>
-            <span style="color: var(--status-${task.status === 'Completed' ? 'completed' : task.status==='Pending'?'pending':'progress'})">
-              ${task.status}
-            </span>
-          </td>
-          <td>
-            <select class="status-select" id="${selectId}">
-              <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>Pending</option>
-              <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-              <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
-            </select>
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-
-        // Add change listener
-        document.getElementById(selectId).addEventListener('change', async (e) => {
-          const newStatus = e.target.value;
-          try {
-            await window.api.updateTaskStatus(task._id, newStatus);
-            loadTasks(); 
-          } catch(err) {
-            alert("Failed to update status");
-            e.target.value = task.status; 
-          }
-        });
-      });
-
-    } catch(err) {
-      console.error(err);
+    if (meetings.length === 0) {
+      noMeetingsMsg.style.display = 'block';
+      return;
     }
+    noMeetingsMsg.style.display = 'none';
+
+    meetings.forEach(m => {
+      const card = buildMeetingCard(m);
+      meetingsWrap.appendChild(card);
+    });
   }
 
-  // --- Helper to build UI card ---
-  function createMeetingCard(m) {
+  function buildMeetingCard(m) {
     const card = document.createElement('div');
-    card.className = 'meeting-card';
-    if(m.status === 'Cancelled') card.style.opacity = '0.7';
-    
-    const dateStr = new Date(m.date).toLocaleString([], {
-      year: 'numeric', month: 'short', day: 'numeric', 
-      hour: '2-digit', minute: '2-digit'
-    });
-    let partsHtml = m.participants && m.participants.length ? `• Participants: ${m.participants.join(', ')}` : '';
-    let decsHtml = m.decisions && m.decisions.length ? `• Decisions: ${m.decisions.join(', ')}` : '';
-    let minHtml = m.minutes ? `<div class="meeting-details" style="margin-top: 10px;"><b>Minutes:</b> ${m.minutes}</div>` : '';
+    card.className = 'meeting-card' + (selectedMeeting && selectedMeeting._id === m._id ? ' active' : '');
+    card.dataset.id = m._id;
 
-    let statusMarkup = m.status === 'Cancelled' ? `<span class="status-cancelled"><strong>[CANCELLED]</strong></span>` : '';
-    let cancelBtnMarkup = m.status === 'Scheduled' ? `<button class="btn btn-sm btn-cancel cancel-btn" data-id="${m._id}">Cancel Meeting</button>` : '';
-    let deleteBtnMarkup = `<button class="btn btn-sm btn-delete delete-btn" data-id="${m._id}" style="margin-left: 5px;">Delete</button>`;
+    const dateStr = formatDate(m.date, m.time);
+    const openCount = (m.actionItems || []).filter(a => a.status !== 'done').length;
+    const avatarHtml = buildAvatarStack(m.participants || []);
 
     card.innerHTML = `
-      <div class="meeting-header-actions">
-        <h3>${m.title} ${statusMarkup}</h3>
-        <div>
-          ${cancelBtnMarkup}
-          ${deleteBtnMarkup}
-        </div>
+      <div class="meeting-card-top">
+        <p class="meeting-card-title">${escHtml(m.title)}</p>
+        ${badgeHtml(m.status)}
       </div>
-      <div class="meeting-meta">${dateStr}</div>
-      <div class="meeting-details">${partsHtml}</div>
-      <div class="meeting-details">${decsHtml}</div>
-      ${minHtml}
+      <div class="meeting-card-bottom">
+        <span class="meeting-card-meta">${dateStr}</span>
+        <div class="avatar-stack">${avatarHtml}</div>
+      </div>
+      ${openCount > 0 ? `<div class="open-tasks-label">${openCount} open task${openCount > 1 ? 's' : ''}</div>` : ''}
     `;
 
-    // Bind cancel event
-    const cancelBtn = card.querySelector('.cancel-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', async (e) => {
-        if (confirm("Are you sure you want to cancel this meeting?")) {
-          try {
-            await window.api.cancelMeeting(m._id);
-            // Reload the view we are currently on
-            const activeView = document.querySelector('.sidebar nav li.active').getAttribute('data-target');
-            if (activeView === 'dashboard-view') loadDashboard();
-            if (activeView === 'meetings-view') loadAllMeetings(document.getElementById('global-search').value);
-          } catch (err) {
-            alert(err.message);
-          }
-        }
-      });
-    }
-
-    // Bind delete event
-    const deleteBtn = card.querySelector('.delete-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', async (e) => {
-        if (confirm("Are you sure you want to permanently delete this meeting? This action cannot be undone.")) {
-          try {
-            await window.api.deleteMeeting(m._id);
-            // Reload the view we are currently on
-            const activeView = document.querySelector('.sidebar nav li.active').getAttribute('data-target');
-            if (activeView === 'dashboard-view') loadDashboard();
-            if (activeView === 'meetings-view') loadAllMeetings(document.getElementById('global-search').value);
-          } catch (err) {
-            alert(err.message);
-          }
-        }
-      });
-    }
-
+    card.addEventListener('click', () => selectMeeting(m));
     return card;
   }
 
-  // ---- Global Search ----
-  const searchInput = document.getElementById('global-search');
-  const searchBtn = document.getElementById('search-btn');
-
-  searchBtn.addEventListener('click', () => doSearch());
-  searchInput.addEventListener('keyup', (e) => {
-    if(e.key === 'Enter') doSearch();
-  });
-
-  function doSearch() {
-    const q = searchInput.value.trim();
-    document.querySelector('.sidebar nav li[data-target="meetings-view"]').click();
-    loadAllMeetings(q);
+  function buildAvatarStack(participants) {
+    const shown = participants.slice(0, 4);
+    const rest = participants.length - 4;
+    let html = shown.map((p, i) =>
+      `<div class="avatar" style="background:${p.color || '#2D6A4F'}; margin-left:${i === 0 ? 0 : -8}px; z-index:${i};" title="${escHtml(p.name)}">${escHtml(p.initials || initials(p.name))}</div>`
+    ).join('');
+    if (rest > 0) {
+      html += `<div class="avatar-overflow">+${rest}</div>`;
+    }
+    return html;
   }
 
-  // Initial Load Check
+  // ─── Meeting Selection ────────────────────────────────────
+  function selectMeeting(m) {
+    selectedMeeting = m;
+    activeTab = 'minutes';
+    editingMinutes = false;
+    showTaskForm = false;
+
+    // Update sidebar active state
+    document.querySelectorAll('.meeting-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.id === m._id);
+    });
+
+    showDetailPanel();
+    renderDetailPanel();
+  }
+
+  function showDetailPanel() {
+    emptyDetail.style.display = 'none';
+    newMeetingPanel.style.display = 'none';
+    detailPanel.style.display = 'flex';
+    detailPanel.classList.remove('fade-in');
+    void detailPanel.offsetWidth; // reflow
+    detailPanel.classList.add('fade-in');
+  }
+
+  function renderDetailPanel() {
+    if (!selectedMeeting) return;
+    const m = selectedMeeting;
+
+    // Header
+    detailTitle.textContent = m.title;
+    detailBadge.innerHTML = badgeHtml(m.status);
+    detailDatetime.textContent = formatDateLong(m.date, m.time);
+
+    // Tabs
+    tabBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === activeTab);
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === 'tab-' + activeTab);
+    });
+
+    renderMinutesTab(m);
+    renderDecisionsTab(m);
+    renderTasksTab(m);
+    renderParticipantsTab(m);
+  }
+
+  // ─── Tabs ─────────────────────────────────────────────────
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      renderDetailPanel();
+    });
+  });
+
+  // ─── Minutes Tab ──────────────────────────────────────────
+  function renderMinutesTab(m) {
+    const hasMinutes = m.minutes && m.minutes.trim();
+    minutesDisplay.textContent = hasMinutes ? m.minutes : 'No minutes recorded yet. Click Edit to add notes.';
+    minutesDisplay.className = 'minutes-text' + (hasMinutes ? '' : ' empty');
+    minutesEditor.value = m.minutes || '';
+
+    setMinutesEditing(false);
+  }
+
+  function setMinutesEditing(on) {
+    editingMinutes = on;
+    minutesDisplay.style.display = on ? 'none' : 'block';
+    minutesEditor.style.display = on ? 'block' : 'none';
+    minutesActions.style.display = on ? 'none' : 'block';
+    minutesSaveActions.style.display = on ? 'flex' : 'none';
+  }
+
+  btnEditMinutes.addEventListener('click', () => setMinutesEditing(true));
+  btnCancelMinutes.addEventListener('click', () => {
+    minutesEditor.value = selectedMeeting ? (selectedMeeting.minutes || '') : '';
+    setMinutesEditing(false);
+  });
+
+  btnSaveMinutes.addEventListener('click', async () => {
+    if (!selectedMeeting) return;
+    try {
+      const updated = await window.api.updateMeeting(selectedMeeting._id, { minutes: minutesEditor.value });
+      patchLocal(updated);
+      setMinutesEditing(false);
+    } catch (err) {
+      alert('Failed to save minutes: ' + err.message);
+    }
+  });
+
+  // ─── Decisions Tab ────────────────────────────────────────
+  function renderDecisionsTab(m) {
+    decisionsList.innerHTML = '';
+    if (!m.decisions || m.decisions.length === 0) {
+      decisionsList.innerHTML = `<p style="color:#ADB5BD; font-size:13px; font-style:italic;">No decisions recorded yet.</p>`;
+      return;
+    }
+    m.decisions.forEach(d => {
+      const div = document.createElement('div');
+      div.className = 'decision-item';
+      div.innerHTML = `<span class="decision-check">✓</span><p class="decision-text">${escHtml(d)}</p>`;
+      decisionsList.appendChild(div);
+    });
+  }
+
+  newDecisionInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') btnAddDecision.click();
+  });
+
+  btnAddDecision.addEventListener('click', async () => {
+    if (!selectedMeeting || !newDecisionInput.value.trim()) return;
+    try {
+      const decisions = [...(selectedMeeting.decisions || []), newDecisionInput.value.trim()];
+      const updated = await window.api.updateMeeting(selectedMeeting._id, { decisions });
+      newDecisionInput.value = '';
+      patchLocal(updated);
+      renderDecisionsTab(selectedMeeting);
+    } catch (err) {
+      alert('Failed to add decision: ' + err.message);
+    }
+  });
+
+  // ─── Tasks Tab ────────────────────────────────────────────
+  function renderTasksTab(m) {
+    // Task form visibility
+    taskFormBox.style.display = showTaskForm ? 'flex' : 'none';
+
+    tasksList.innerHTML = '';
+    if (!m.actionItems || m.actionItems.length === 0) {
+      tasksList.innerHTML = `<p style="color:#ADB5BD; font-size:13px; font-style:italic;">No tasks assigned yet.</p>`;
+      return;
+    }
+    m.actionItems.forEach(task => {
+      const item = document.createElement('div');
+      item.className = 'task-item' + (task.status === 'done' ? ' done' : '');
+
+      const checked = task.status === 'done';
+      const taskBadge = taskBadgeHtml(task.status);
+      const metaParts = [];
+      if (task.assignee) metaParts.push(`→ ${escHtml(task.assignee)}`);
+      if (task.due) metaParts.push(`Due ${formatShortDate(task.due)}`);
+
+      item.innerHTML = `
+        <button class="task-checkbox${checked ? ' checked' : ''}" data-taskid="${task._id || task.id}" title="Toggle done"></button>
+        <div class="task-main">
+          <p class="task-text${checked ? ' done' : ''}">${escHtml(task.text)}</p>
+          ${metaParts.length ? `<p class="task-meta">${metaParts.join(' · ')}</p>` : ''}
+        </div>
+        <button class="task-status-cycle" data-taskid="${task._id || task.id}" style="background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;">${taskBadge}</button>
+      `;
+
+      // Toggle done
+      item.querySelector('.task-checkbox').addEventListener('click', () => cycleTaskStatus(task, 'toggle'));
+      // Cycle status
+      item.querySelector('.task-status-cycle').addEventListener('click', () => cycleTaskStatus(task, 'cycle'));
+
+      tasksList.appendChild(item);
+    });
+  }
+
+  async function cycleTaskStatus(task, mode) {
+    if (!selectedMeeting) return;
+    let newStatus;
+    if (mode === 'toggle') {
+      newStatus = task.status === 'done' ? 'open' : 'done';
+    } else {
+      const cycle = { open: 'in-progress', 'in-progress': 'done', done: 'open' };
+      newStatus = cycle[task.status] || 'open';
+    }
+    const taskId = task._id || task.id;
+    const updatedItems = (selectedMeeting.actionItems || []).map(t =>
+      (t._id || t.id) === taskId ? { ...t, status: newStatus } : t
+    );
+    try {
+      const updated = await window.api.updateMeeting(selectedMeeting._id, { actionItems: updatedItems });
+      patchLocal(updated);
+      renderTasksTab(selectedMeeting);
+    } catch (err) {
+      alert('Failed to update task: ' + err.message);
+    }
+  }
+
+  btnToggleTaskForm.addEventListener('click', () => {
+    showTaskForm = !showTaskForm;
+    taskFormBox.style.display = showTaskForm ? 'flex' : 'none';
+  });
+
+  btnCancelTaskForm.addEventListener('click', () => {
+    showTaskForm = false;
+    taskFormBox.style.display = 'none';
+    newTaskText.value = '';
+    newTaskAssignee.value = '';
+    newTaskDue.value = '';
+  });
+
+  btnAddTask.addEventListener('click', async () => {
+    if (!selectedMeeting || !newTaskText.value.trim()) return;
+    const newTask = {
+      text: newTaskText.value.trim(),
+      assignee: newTaskAssignee.value.trim(),
+      due: newTaskDue.value,
+      status: 'open'
+    };
+    const updatedItems = [...(selectedMeeting.actionItems || []), newTask];
+    try {
+      const updated = await window.api.updateMeeting(selectedMeeting._id, { actionItems: updatedItems });
+      newTaskText.value = '';
+      newTaskAssignee.value = '';
+      newTaskDue.value = '';
+      showTaskForm = false;
+      taskFormBox.style.display = 'none';
+      patchLocal(updated);
+      renderTasksTab(selectedMeeting);
+    } catch (err) {
+      alert('Failed to add task: ' + err.message);
+    }
+  });
+
+  // ─── Participants Tab ─────────────────────────────────────
+  function renderParticipantsTab(m) {
+    participantsList.innerHTML = '';
+    if (!m.participants || m.participants.length === 0) {
+      participantsList.innerHTML = `<p style="color:#ADB5BD; font-size:13px; font-style:italic;">No participants added.</p>`;
+      return;
+    }
+    m.participants.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'participant-item';
+      item.innerHTML = `
+        <div class="avatar-lg" style="background:${p.color || '#2D6A4F'}; width:38px; height:38px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0;">${escHtml(p.initials || initials(p.name))}</div>
+        <div>
+          <p class="participant-name">${escHtml(p.name)}</p>
+          <p class="participant-role">${escHtml(p.role || 'attendee')}</p>
+        </div>
+      `;
+      participantsList.appendChild(item);
+    });
+  }
+
+  // ─── Delete Meeting ───────────────────────────────────────
+  document.getElementById('btn-delete-meeting').addEventListener('click', async () => {
+    if (!selectedMeeting) return;
+    const confirmed = confirm(`Permanently delete "${selectedMeeting.title}"? This cannot be undone.`);
+    if (!confirmed) return;
+    try {
+      await window.api.deleteMeeting(selectedMeeting._id);
+      meetings = meetings.filter(m => m._id !== selectedMeeting._id);
+      selectedMeeting = null;
+      detailPanel.style.display = 'none';
+      emptyDetail.style.display = 'flex';
+      updateStats();
+      renderSidebar();
+    } catch (err) {
+      alert('Failed to delete meeting: ' + err.message);
+    }
+  });
+
+  // ─── Close Detail ─────────────────────────────────────────
+  btnCloseDetail.addEventListener('click', () => {
+    selectedMeeting = null;
+    document.querySelectorAll('.meeting-card').forEach(c => c.classList.remove('active'));
+    detailPanel.style.display = 'none';
+    emptyDetail.style.display = 'flex';
+  });
+
+  // ─── New Meeting ──────────────────────────────────────────
+  btnNewMeeting.addEventListener('click', () => {
+    selectedMeeting = null;
+    document.querySelectorAll('.meeting-card').forEach(c => c.classList.remove('active'));
+    detailPanel.style.display = 'none';
+    emptyDetail.style.display = 'none';
+    newMeetingPanel.style.display = 'block';
+    newMeetingPanel.classList.remove('fade-in');
+    void newMeetingPanel.offsetWidth;
+    newMeetingPanel.classList.add('fade-in');
+  });
+
+  btnCancelNew.addEventListener('click', () => {
+    newMeetingPanel.style.display = 'none';
+    emptyDetail.style.display = 'flex';
+    clearNewForm();
+  });
+
+  btnCreateMeeting.addEventListener('click', async () => {
+    if (!nmTitle.value.trim()) {
+      nmTitle.focus();
+      return;
+    }
+
+    // Merge facilitator + chip participants
+    const facilitatorName = nmFacilitator.value.trim();
+    const participants = [];
+    if (facilitatorName) {
+      participants.push({ name: facilitatorName, role: 'facilitator', initials: initials(facilitatorName), color: '#2D6A4F' });
+    }
+    nmParticipants.forEach(p => participants.push(p));
+
+    const decisionsRaw = nmDecisions.value.trim();
+    const decisions = decisionsRaw ? decisionsRaw.split(',').map(d => d.trim()).filter(Boolean) : [];
+
+    const chosenDate = nmDate.value || new Date().toISOString().split('T')[0];
+    // Build a full datetime for accurate comparison — if no time picked, treat as end-of-day
+    const autoStatus = (() => {
+      const now = new Date();
+      if (nmTime.value) {
+        // nmTime.value is "HH:MM" (24h from input[type=time])
+        const meetingDt = new Date(`${chosenDate}T${nmTime.value}:00`);
+        return meetingDt < now ? 'completed' : 'upcoming';
+      }
+      // No time — compare dates only; past dates = completed, today/future = upcoming
+      return chosenDate < now.toISOString().split('T')[0] ? 'completed' : 'upcoming';
+    })();
+
+    const payload = {
+      title: nmTitle.value.trim(),
+      date: chosenDate,
+      time: nmTime.value ? formatTime12(nmTime.value) : '10:00 AM',
+      status: autoStatus,
+      participants,
+      minutes: nmMinutes.value === 'custom'
+        ? nmMinutesCustom.value.trim()
+        : nmMinutes.value,
+      notes: nmNotes.value.trim(),
+      decisions,
+      actionItems: []
+    };
+
+    try {
+      const created = await window.api.createMeeting(payload);
+      meetings = [created, ...meetings];
+      clearNewForm();
+      newMeetingPanel.style.display = 'none';
+      updateStats();
+      renderSidebar();
+      selectMeeting(created);
+    } catch (err) {
+      alert('Failed to create meeting: ' + err.message);
+    }
+  });
+
+  function clearNewForm() {
+    nmTitle.value = '';
+    nmDate.value = '';
+    nmTime.value = '';
+    nmFacilitator.value = '';
+    nmParticipants = [];
+    nmParticipantInput.value = '';
+    renderParticipantChips();
+    nmMinutes.selectedIndex = 0;
+    nmMinutesCustom.style.display = 'none';
+    nmMinutesCustom.value = '';
+    nmNotes.value = '';
+    nmDecisions.value = '';
+  }
+
+  // ─── Search & Filter ──────────────────────────────────────
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value.trim();
+    loadMeetings();
+  });
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter;
+      filterBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === activeFilter));
+      loadMeetings();
+    });
+  });
+
+  // ─── Local state patch ────────────────────────────────────
+  function patchLocal(updated) {
+    meetings = meetings.map(m => m._id === updated._id ? updated : m);
+    selectedMeeting = updated;
+    updateStats();
+    renderSidebar();
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────
+  const PALETTE = ['#2D6A4F','#1B4332','#40916C','#9B2226','#AE2012','#CA6702','#5C4033','#1864AB'];
+  let paletteIdx = 0;
+  function nextColor() { return PALETTE[paletteIdx++ % PALETTE.length]; }
+
+  function initials(name) {
+    return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(date, time) {
+    if (!date) return '';
+    const d = new Date(date + 'T12:00:00');
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + (time ? ' · ' + time : '');
+  }
+
+  function formatDateLong(date, time) {
+    if (!date) return '';
+    const d = new Date(date + 'T12:00:00');
+    return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + (time ? ' · ' + time : '');
+  }
+
+  function formatShortDate(date) {
+    if (!date) return '';
+    const d = new Date(date + 'T12:00:00');
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  }
+
+  function formatTime12(timeStr) {
+    // timeStr is "HH:MM" from input[type=time]
+    if (!timeStr) return '';
+    const [hStr, mStr] = timeStr.split(':');
+    let h = parseInt(hStr, 10);
+    const m = mStr || '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
+  function badgeHtml(status) {
+    const map = {
+      completed:   { cls: 'badge-completed',   label: 'Completed' },
+      upcoming:    { cls: 'badge-upcoming',     label: 'Upcoming' },
+      'in-progress':{ cls: 'badge-in-progress', label: 'In Progress' },
+      cancelled:   { cls: 'badge-cancelled',    label: 'Cancelled' },
+      'Scheduled': { cls: 'badge-upcoming',     label: 'Scheduled' },
+      'Cancelled': { cls: 'badge-cancelled',    label: 'Cancelled' },
+    };
+    const s = map[status] || { cls: 'badge-upcoming', label: status || 'Upcoming' };
+    return `<span class="badge ${s.cls}">${s.label}</span>`;
+  }
+
+  function taskBadgeHtml(status) {
+    const map = {
+      open:         { cls: 'badge-open',        label: 'Open' },
+      'in-progress':{ cls: 'badge-in-progress', label: 'In Progress' },
+      done:         { cls: 'badge-done',         label: 'Done' },
+    };
+    const s = map[status] || map['open'];
+    return `<span class="badge ${s.cls}">${s.label}</span>`;
+  }
+
+  // ─── Init ─────────────────────────────────────────────────
   checkAuth();
 });

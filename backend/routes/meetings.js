@@ -1,12 +1,18 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const router = express.Router();
-const { getMeetings, getMeetingById, createMeeting, cancelMeeting, deleteMeeting } = require('../controllers/meetingController');
+const {
+  getMeetings,
+  getMeetingById,
+  createMeeting,
+  updateMeeting,
+  deleteMeeting
+} = require('../controllers/meetingController');
 
 router.get('/', auth, getMeetings);
 router.get('/:id', auth, getMeetingById);
 router.post('/', auth, createMeeting);
-router.put('/:id/cancel', auth, cancelMeeting);
+router.patch('/:id', auth, updateMeeting);
 router.delete('/:id', auth, deleteMeeting);
 
 module.exports = router;
