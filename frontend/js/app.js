@@ -730,5 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ─── Init ─────────────────────────────────────────────────
+  // Pre-select login vs signup based on ?mode= from landing page
+  const urlMode = new URLSearchParams(window.location.search).get('mode');
+  if (urlMode === 'signup' || urlMode === 'login') setAuthMode(urlMode);
+
   checkAuth();
 });

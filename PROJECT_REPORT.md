@@ -41,6 +41,7 @@ MeetFlow uses a standard Client-Server architecture:
 ## 5. Core Features
 
 ### User Authentication
+- Beautiful landing page for feature overview and onboarding.
 - Secure signup and login with JWT-based session management.
 - Passwords hashed with bcryptjs before storage.
 - All meeting routes are protected by an `auth` middleware.
@@ -112,7 +113,7 @@ createdBy    ObjectId    → User
 2. `cd backend && npm install`
 3. Create `backend/.env` with `PORT`, `MONGO_URI`, `JWT_SECRET`
 4. `node server.js` to start the backend
-5. Serve `frontend/index.html` via Live Server or `python3 -m http.server`
+5. Serve `frontend/landing.html` via Live Server or `python3 -m http.server`
 
 ---
 

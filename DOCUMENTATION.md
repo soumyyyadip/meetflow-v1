@@ -77,15 +77,20 @@ All routes under `/api/meetings` require `Authorization: Bearer <jwt_token>`.
 
 ```
 frontend/
+├── landing.html    # Marketing landing page
 ├── index.html      # Single-page app shell (auth + master-detail layout)
-├── css/style.css   # Full design system (DM fonts, light theme, badges, layout)
+├── css/
+│   ├── style.css   # Full design system (DM fonts, light theme, badges, layout)
+│   └── landing.css # Landing page specific styles
 └── js/
     ├── api.js      # Api class: login, signup, getMeetings, createMeeting, updateMeeting, deleteMeeting
-    └── app.js      # All UI logic: auth, sidebar, chips, tabs, inline edits, task cycling
+    ├── app.js      # All UI logic: auth, sidebar, chips, tabs, inline edits, task cycling
+    └── landing.js  # Scroll animations and smooth scrolling
 ```
 
 ### Key UI Behaviours
 
+- **Landing Page**: Animated hero section, scroll-reveal features, and dynamic routing (`?mode=login` vs `?mode=signup`) to the main app auth flow.
 - **New Meeting form**: clock picker for time, participant chip tags (add/remove), duration dropdown with Custom option, separate Minutes (duration) and Notes fields, decisions (comma-separated).
 - **Status auto-derive on create**: frontend computes `upcoming` vs `completed` from the full `date + time` datetime at moment of creation.
 - **Tabbed detail panel**: Minutes (editable), Decisions (add inline), Tasks (add/toggle done/cycle status), Participants (avatar list).
