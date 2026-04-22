@@ -69,8 +69,8 @@ Minutes/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/soumyyyadip/meetflow-v1.git
-cd meetflow-v1
+git clone https://github.com/soumyyyadip/minutes.git
+cd minutes
 ```
 
 ### 2. Install backend dependencies
