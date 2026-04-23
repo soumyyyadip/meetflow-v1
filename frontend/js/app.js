@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const authSubmitBtn  = document.getElementById('auth-submit-btn');
   const authToggleLink = document.getElementById('auth-toggle-link');
   const authToggleMsg  = document.getElementById('auth-toggle-msg');
+  const authCardTitle  = document.getElementById('auth-card-title');
+  const authCardSub    = document.getElementById('auth-card-sub');
+  const authPwToggle   = document.getElementById('auth-pw-toggle');
+  const authPwInput    = document.getElementById('auth-password');
   const btnLogout      = document.getElementById('btn-logout');
 
   const statMeetings   = document.getElementById('stat-meetings');
@@ -157,15 +161,28 @@ document.addEventListener('DOMContentLoaded', () => {
   function setAuthMode(mode) {
     authMode = mode;
     if (mode === 'login') {
-      authSubmitBtn.textContent = 'Login';
+      if (authCardTitle) authCardTitle.textContent = 'Welcome back';
+      if (authCardSub)   authCardSub.textContent   = 'Sign in to your account to continue.';
+      authSubmitBtn.textContent = 'Sign in';
       authToggleMsg.textContent = "Don't have an account?";
-      authToggleLink.textContent = 'Sign up';
+      authToggleLink.textContent = 'Create one free';
     } else {
-      authSubmitBtn.textContent = 'Sign up';
+      if (authCardTitle) authCardTitle.textContent = 'Create your account';
+      if (authCardSub)   authCardSub.textContent   = 'Start capturing meetings for free — no credit card needed.';
+      authSubmitBtn.textContent = 'Get started free';
       authToggleMsg.textContent = 'Already have an account?';
-      authToggleLink.textContent = 'Login';
+      authToggleLink.textContent = 'Sign in';
     }
     authError.textContent = '';
+  }
+
+  // Password show/hide toggle
+  if (authPwToggle && authPwInput) {
+    authPwToggle.addEventListener('click', () => {
+      const isText = authPwInput.type === 'text';
+      authPwInput.type = isText ? 'password' : 'text';
+      authPwToggle.textContent = isText ? '👁' : '👀';
+    });
   }
 
   authToggleLink.addEventListener('click', e => {

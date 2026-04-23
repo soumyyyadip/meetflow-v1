@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minutes — Meeting Records & Action Items</title>
-  <meta name="description" content="Minutes: your personal meeting records, minutes, decisions, and action item tracker." />
-  <link rel="stylesheet" href="./css/style.css" />
+  <title>Minutes — Sign in &amp; Get started</title>
+  <meta name="description" content="Sign in or create your Minutes account to capture meeting records, decisions, and action items." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
 
@@ -16,24 +16,111 @@
        AUTH VIEW
   ════════════════════════════════════════════ -->
   <div id="auth-view">
-    <div class="auth-box">
-      <h1>Minutes —</h1>
-      <p class="auth-sub">Sign in to access your meeting records.</p>
-      <form id="auth-form">
-        <div class="form-field">
-          <input type="text" id="auth-username" placeholder="Username" required />
+
+    <!-- Left brand panel -->
+    <div class="auth-brand-panel">
+      <!-- Background layers -->
+      <div class="auth-noise"></div>
+      <div class="auth-glow auth-glow-1"></div>
+      <div class="auth-glow auth-glow-2"></div>
+
+      <!-- Back link -->
+      <a href="./landing.html" id="auth-back-link" class="auth-back">
+        <span class="auth-back-arrow">←</span> Back to home
+      </a>
+
+      <!-- Brand content -->
+      <div class="auth-brand-content">
+        <div class="auth-brand-badge">
+          <span class="auth-badge-dot"></span>
+          Every meeting, perfectly captured.
         </div>
-        <div class="form-field">
-          <input type="password" id="auth-password" placeholder="Password" required />
+        <h2 class="auth-brand-title">Minutes —</h2>
+        <p class="auth-brand-tagline">
+          The meeting platform built for teams who care about<em> follow-through.</em>
+        </p>
+        <ul class="auth-feature-list">
+          <li>
+            <span class="auth-feature-icon">📋</span>
+            <span>Structured minutes &amp; rich notes</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">✅</span>
+            <span>Decision &amp; outcome tracking</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">🎯</span>
+            <span>Action items with due dates</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">🔍</span>
+            <span>Instant search across all meetings</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Floating mini-mockup -->
+      <div class="auth-mini-mockup">
+        <div class="amm-row">
+          <div class="amm-dot red"></div>
+          <div class="amm-dot yellow"></div>
+          <div class="amm-dot green"></div>
+          <span class="amm-bar">Minutes — Dashboard</span>
         </div>
-        <p class="auth-error" id="auth-error"></p>
-        <button type="submit" id="auth-submit-btn" class="btn-primary">Login</button>
-      </form>
-      <p class="auth-toggle">
-        <span id="auth-toggle-msg">Don't have an account?</span>
-        <a href="#" id="auth-toggle-link">Sign up</a>
-      </p>
+        <div class="amm-body">
+          <div class="amm-stat-row">
+            <div class="amm-stat"><span class="amm-val">12</span><span class="amm-lbl">Meetings</span></div>
+            <div class="amm-stat warn"><span class="amm-val">4</span><span class="amm-lbl">Open tasks</span></div>
+            <div class="amm-stat"><span class="amm-val">3</span><span class="amm-lbl">This month</span></div>
+          </div>
+          <div class="amm-item active">
+            <span class="amm-badge upcoming">Upcoming</span>
+            <div class="amm-title">Q2 Sprint Planning</div>
+            <div class="amm-meta">Apr 23 · 10:00 AM</div>
+          </div>
+          <div class="amm-item">
+            <span class="amm-badge completed">Completed</span>
+            <div class="amm-title">Product Review</div>
+            <div class="amm-meta">Apr 19 · 2:30 PM</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+      <div class="auth-card">
+        <!-- Logo (shown on mobile when brand panel is hidden) -->
+        <a href="./landing.html" class="auth-card-logo">Minutes —</a>
+
+        <div class="auth-card-header">
+          <h1 id="auth-card-title">Welcome back</h1>
+          <p class="auth-card-sub" id="auth-card-sub">Sign in to your account to continue.</p>
+        </div>
+
+        <form id="auth-form" autocomplete="on">
+          <div class="auth-field">
+            <label for="auth-username">Username</label>
+            <input type="text" id="auth-username" placeholder="Enter your username" required autocomplete="username" />
+          </div>
+          <div class="auth-field">
+            <label for="auth-password">Password</label>
+            <div class="auth-password-wrap">
+              <input type="password" id="auth-password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" id="auth-pw-toggle" class="auth-pw-eye" aria-label="Toggle password visibility">👁</button>
+            </div>
+          </div>
+          <p class="auth-error" id="auth-error"></p>
+          <button type="submit" id="auth-submit-btn" class="auth-submit-btn">Sign in</button>
+        </form>
+
+        <p class="auth-switch">
+          <span id="auth-toggle-msg">Don't have an account?</span>
+          <a href="#" id="auth-toggle-link">Create one free</a>
+        </p>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══════════════════════════════════════
