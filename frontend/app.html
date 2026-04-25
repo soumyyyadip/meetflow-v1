@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minutes — Sign in &amp; Get started</title>
+  <meta name="description" content="Sign in or create your Minutes account to capture meeting records, decisions, and action items." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════
+       AUTH VIEW
+  ════════════════════════════════════════════ -->
+  <div id="auth-view">
+
+    <!-- Left brand panel -->
+    <div class="auth-brand-panel">
+      <!-- Background layers -->
+      <div class="auth-noise"></div>
+      <div class="auth-glow auth-glow-1"></div>
+      <div class="auth-glow auth-glow-2"></div>
+
+      <!-- Back link -->
+      <a href="./index.html" id="auth-back-link" class="auth-back">
+        <span class="auth-back-arrow">←</span> Back to home
+      </a>
+
+      <!-- Brand content -->
+      <div class="auth-brand-content">
+        <div class="auth-brand-badge">
+          <span class="auth-badge-dot"></span>
+          Every meeting, perfectly captured.
+        </div>
+        <h2 class="auth-brand-title">Minutes —</h2>
+        <p class="auth-brand-tagline">
+          The meeting platform built for teams who care about<em> follow-through.</em>
+        </p>
+        <ul class="auth-feature-list">
+          <li>
+            <span class="auth-feature-icon">📋</span>
+            <span>Structured minutes &amp; rich notes</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">✅</span>
+            <span>Decision &amp; outcome tracking</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">🎯</span>
+            <span>Action items with due dates</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">🔍</span>
+            <span>Instant search across all meetings</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Floating mini-mockup -->
+      <div class="auth-mini-mockup">
+        <div class="amm-row">
+          <div class="amm-dot red"></div>
+          <div class="amm-dot yellow"></div>
+          <div class="amm-dot green"></div>
+          <span class="amm-bar">Minutes — Dashboard</span>
+        </div>
+        <div class="amm-body">
+          <div class="amm-stat-row">
+            <div class="amm-stat"><span class="amm-val">12</span><span class="amm-lbl">Meetings</span></div>
+            <div class="amm-stat warn"><span class="amm-val">4</span><span class="amm-lbl">Open tasks</span></div>
+            <div class="amm-stat"><span class="amm-val">3</span><span class="amm-lbl">This month</span></div>
+          </div>
+          <div class="amm-item active">
+            <span class="amm-badge upcoming">Upcoming</span>
+            <div class="amm-title">Q2 Sprint Planning</div>
+            <div class="amm-meta">Apr 23 · 10:00 AM</div>
+          </div>
+          <div class="amm-item">
+            <span class="amm-badge completed">Completed</span>
+            <div class="amm-title">Product Review</div>
+            <div class="amm-meta">Apr 19 · 2:30 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+      <div class="auth-card">
+        <!-- Logo (shown on mobile when brand panel is hidden) -->
+        <a href="./index.html" class="auth-card-logo">Minutes —</a>
+
+        <div class="auth-card-header">
+          <h1 id="auth-card-title">Welcome back</h1>
+          <p class="auth-card-sub" id="auth-card-sub">Sign in to your account to continue.</p>
+        </div>
+
+        <form id="auth-form" autocomplete="on">
+          <div class="auth-field">
+            <label for="auth-username">Username</label>
+            <input type="text" id="auth-username" placeholder="Enter your username" required autocomplete="username" />
+          </div>
+          <div class="auth-field">
+            <label for="auth-password">Password</label>
+            <div class="auth-password-wrap">
+              <input type="password" id="auth-password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" id="auth-pw-toggle" class="auth-pw-eye" aria-label="Toggle password visibility">👁</button>
+            </div>
+          </div>
+          <p class="auth-error" id="auth-error"></p>
+          <button type="submit" id="auth-submit-btn" class="auth-submit-btn">Sign in</button>
+        </form>
+
+        <p class="auth-switch">
+          <span id="auth-toggle-msg">Don't have an account?</span>
+          <a href="#" id="auth-toggle-link">Create one free</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       MAIN APP (hidden until logged in)
+  ════════════════════════════════════════════ -->
+  <div id="app-shell" style="display:none;">
+
+    <!-- ── SIDEBAR ───────────────────────────── -->
+    <aside id="sidebar">
+
+      <div class="sidebar-logo">
+        <h1><span>Minutes</span> —</h1>
+        <p>Meeting records &amp; action items</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-meetings">0</div>
+          <div class="stat-lbl">Meetings</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-open-tasks">0</div>
+          <div class="stat-lbl">Open tasks</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val" id="stat-this-month">0</div>
+          <div class="stat-lbl">This month</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search meetings, decisions, action items…" />
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+      </div>
+
+      <!-- Meeting list -->
+      <div id="meetings-list-wrap">
+        <p class="no-meetings-msg" id="no-meetings-msg" style="display:none;">No meetings found.</p>
+        <!-- Meeting cards injected by JS -->
+      </div>
+
+      <!-- Logout + New meeting -->
+      <div class="new-meeting-btn-wrap">
+        <button id="btn-logout" style="width:100%; padding:7px; margin-bottom:8px; background:none; border:1px solid #E9ECEF; border-radius:8px; color:#868E96; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer;">Logout</button>
+        <button id="btn-new-meeting">+ New Meeting</button>
+      </div>
+
+    </aside>
+
+    <!-- ── MAIN CONTENT ───────────────────────── -->
+    <main id="main-content">
+
+      <!-- Empty state -->
+      <div class="empty-detail fade-in" id="empty-detail">
+        <div class="empty-icon">📋</div>
+        <p>Select a meeting to view details</p>
+        <span>or create a new one to get started</span>
+      </div>
+
+      <!-- New meeting form -->
+      <div id="new-meeting-panel">
+        <h2>New Meeting</h2>
+        <p class="sub">Fill in the details to create a new meeting record.</p>
+        <div class="nm-field">
+          <input type="text" id="nm-title" class="nm-title" placeholder="Meeting title *" />
+        </div>
+        <div class="nm-row">
+          <div class="nm-field">
+            <input type="date" id="nm-date" />
+          </div>
+          <div class="nm-field">
+            <input type="time" id="nm-time" />
+          </div>
+        </div>
+        <div class="nm-field">
+          <input type="text" id="nm-facilitator" placeholder="Facilitator name (optional)" />
+        </div>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Participants</label>
+          <div id="nm-participants-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:7px;"></div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="nm-participant-input" placeholder="Add participant name, press Enter" style="flex:1; padding:9px 12px; border:1.5px solid #E9ECEF; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#FAFAFA; outline:none;" />
+            <button type="button" id="btn-add-participant" style="padding:9px 14px; background:#2D6A4F; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap;">Add</button>
+          </div>
+        </div>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Duration (Meeting Minutes)</label>
+          <select id="nm-minutes" style="width:100%; padding:9px 12px; border:1.5px solid #E9ECEF; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#FAFAFA; outline:none; cursor:pointer; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23868E96' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 12px center;">
+            <option value="">Select duration (optional)</option>
+            <option value="15 min">15 minutes</option>
+            <option value="30 min">30 minutes</option>
+            <option value="45 min">45 minutes</option>
+            <option value="1 hr">1 hour</option>
+            <option value="1 hr 15 min">1 hour 15 minutes</option>
+            <option value="1 hr 30 min">1 hour 30 minutes</option>
+            <option value="1 hr 45 min">1 hour 45 minutes</option>
+            <option value="2 hrs">2 hours</option>
+            <option value="2 hrs 30 min">2 hours 30 minutes</option>
+            <option value="3 hrs">3 hours</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <input type="text" id="nm-minutes-custom" placeholder="e.g. 90 mins, 2.5 hours" style="display:none; width:100%; margin-top:8px; padding:9px 12px; border:1.5px solid #2D6A4F; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; color:#1a1a1a; background:#F8FFF9; outline:none;" />
+        </div>
+        <div class="nm-field">
+          <label style="display:block; font-size:12px; color:#868E96; margin-bottom:5px; font-weight:500;">Meeting Notes</label>
+          
+          <textarea id="nm-notes" rows="3" placeholder="Additional notes, context, follow-ups…"></textarea>
+        </div>
+        <div class="nm-field">
+          <input type="text" id="nm-decisions" placeholder="Decisions, comma-separated (optional)" />
+        </div>
+        <div class="nm-actions">
+          <button class="btn-primary" id="btn-create-meeting">Create Meeting</button>
+          <button class="btn-cancel-nm" id="btn-cancel-new-meeting">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div id="detail-panel" class="fade-in" style="display:none;">
+
+        <div class="detail-header">
+          <div class="detail-header-top">
+            <h2 id="detail-title">Meeting Title</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="btn-delete-meeting" title="Delete meeting permanently" style="background:none; border:1px solid #FFB3B3; border-radius:6px; color:#C92A2A; font-size:12px; font-family:'DM Sans',sans-serif; padding:4px 10px; cursor:pointer; transition:all 0.15s;">Delete</button>
+              <button id="btn-close-detail">×</button>
+            </div>
+          </div>
+          <div class="detail-meta">
+            <span id="detail-badge"></span>
+            <span id="detail-datetime"></span>
+          </div>
+          <div class="detail-tabs">
+            <button class="tab-btn active" data-tab="minutes">Minutes</button>
+            <button class="tab-btn" data-tab="notes">Notes</button>
+            <button class="tab-btn" data-tab="decisions">Decisions</button>
+            <button class="tab-btn" data-tab="tasks">Tasks</button>
+            <button class="tab-btn" data-tab="participants">Participants</button>
+          </div>
+        </div>
+
+        <div class="detail-body">
+
+          <!-- Minutes Tab -->
+          <div class="tab-pane active" id="tab-minutes">
+            <div class="minutes-header">
+              <p class="section-label">Meeting Duration</p>
+              <div id="minutes-actions">
+                <button class="btn-outline-sm" id="btn-edit-minutes">Edit</button>
+              </div>
+              <div id="minutes-save-actions" style="display:none; gap:6px; display:none;">
+                <button class="btn-green-sm" id="btn-save-minutes">Save</button>
+                <button class="btn-ghost-sm" id="btn-cancel-minutes">Cancel</button>
+              </div>
+            </div>
+            <p class="minutes-text" id="minutes-display">No minutes recorded yet. Click Edit to add notes.</p>
+            <textarea class="detail-textarea" id="minutes-editor" placeholder="Type meeting notes here…"></textarea>
+          </div>
+
+          <!-- Notes Tab -->
+          <div class="tab-pane" id="tab-notes">
+            <div class="minutes-header">
+              <p class="section-label">Meeting Notes</p>
+              <div id="notes-actions">
+                <button class="btn-outline-sm" id="btn-edit-notes">Edit</button>
+              </div>
+              <div id="notes-save-actions" style="display:none; gap:6px;">
+                <button class="btn-green-sm" id="btn-save-notes">Save</button>
+                <button class="btn-ghost-sm" id="btn-cancel-notes">Cancel</button>
+              </div>
+            </div>
+            <p class="notes-preview" id="notes-display">No notes added yet. Click Edit to add context or follow-ups.</p>
+            <textarea class="notes-edit-area" id="notes-editor" placeholder="Add context, follow-ups, decisions background…"></textarea>
+          </div>
+
+          <!-- Decisions Tab -->
+          <div class="tab-pane" id="tab-decisions">
+            <p class="section-label">Decisions Taken</p>
+            <div id="decisions-list"></div>
+            <div class="add-row">
+              <input class="detail-input" type="text" id="new-decision-input" placeholder="Record a decision…" />
+              <button class="btn-add" id="btn-add-decision">Add</button>
+            </div>
+          </div>
+
+          <!-- Tasks Tab -->
+          <div class="tab-pane" id="tab-tasks">
+            <div class="tasks-header">
+              <p class="section-label">Action Items</p>
+              <button class="btn-outline-sm" id="btn-toggle-task-form">+ New Task</button>
+            </div>
+            <div class="task-form-box" id="task-form-box">
+              <input class="detail-input" type="text" id="new-task-text" placeholder="Task description" />
+              <div class="task-form-row">
+                <input class="detail-input" type="text" id="new-task-assignee" placeholder="Assignee name" style="flex:1;" />
+                <input class="detail-input" type="date" id="new-task-due" style="flex:1;" />
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-add" id="btn-add-task">Add Task</button>
+                <button class="btn-ghost-sm" id="btn-cancel-task-form">Cancel</button>
+              </div>
+            </div>
+            <div id="tasks-list"></div>
+          </div>
+
+          <!-- Participants Tab -->
+          <div class="tab-pane" id="tab-participants">
+            <p class="section-label">Participants</p>
+            <div id="participants-list"></div>
+          </div>
+
+        </div><!-- /.detail-body -->
+      </div><!-- /#detail-panel -->
+
+    </main>
+
+  </div><!-- /#app-shell -->
+
+  <script src="./js/api.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
