@@ -1,6 +1,6 @@
 # Minutes
 
-**Live Demo:** [https://minutes-free.netlify.app/](https://minutes-free.netlify.app/)
+**Live :** [https://minutes-free.netlify.app/](https://minutes-free.netlify.app/)
 
 > A clean, lightweight meeting management app — record minutes, track decisions, manage action items and participants. Built with Node.js, Express, MongoDB, and a HTML/CSS/JS frontend.
 
